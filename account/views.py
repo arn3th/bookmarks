@@ -5,6 +5,7 @@ from django.contrib.auth.decorators import login_required
 from .forms import LoginForm, UserRegistrationForm, UserEditForm, ProfileEditForm
 from .models import Profile
 from django.contrib import messages
+from common.decorators import user_not_logged
 
 
 @login_required
@@ -59,6 +60,7 @@ def user_login(request):
     return render(request, 'account/login.html', {'form': form})
 
 
+@user_not_logged
 def register(request):
     if request.method == 'POST':
         user_form = UserRegistrationForm(request.POST)
