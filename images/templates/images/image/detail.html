@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% block title %}{{ image.title }}{% endblock %}
+
+{% block content %}
+    <h1>{{ image.title }}</h1>
+    {% load thumbnail %}
+    {% thumbnail image.image "300" as im %}
+        <a href="{{ image.image.url }}" class="image-detail">
+            <img src="{{ im.url }}" class="image-detail">
+        </a>
+    {% endthumbnail %}
+    {% with total_likes=image.users_like.count users_like=image.users_like.all %}
+        <div class="image-info">
+            <div>
+                <span class="count">
+                    <span class="total">{{ total_likes }}</span>polubień
+                </span>
+                <a href="#" data-id="{{ image.id }}" data-action="{% if request.user in users_like %}un{% endif %}like" class="like button">
+                    {% if request.user not in users_like %}
+                        Lubię
+                    {% else %}
+                        Nie lubię
+                    {% endif %}
+                </a>
+            </div>
+            {{ image.description|linebreaks }}
+        </div>
+        <div class="image-likes">
+            {% for user in image.users_like.all %}
+                <div>
+                    <img src="{{ user.profile.photo.url }}">
+                    <p>{{ user.first_name }}</p>
+                </div>
+            {% empty %}
+                Jeszcze nikt nie polubił obrazu.
+            {% endfor %}
+        </div>
+    {% endwith %}
+{% endblock %}
