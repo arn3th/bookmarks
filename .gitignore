@@ -7,3 +7,4 @@ db.*
 *.pyc
 media/images/
 media/cache/
+.idea/
