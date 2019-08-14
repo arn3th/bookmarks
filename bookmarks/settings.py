@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/2.2/ref/settings/
 """
 
 import os
+from django.urls import reverse_lazy
 from .secret_settings import SECRET_KEY as S_KEY, EMAIL_PASSWORD as EMAIL_P, SOCIAL_AUTH_GOOGLE_OAUTH2_KEY as GOOGLE_KEY,\
     SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET as GOOGLE_SECRET
 
@@ -152,3 +153,8 @@ AUTHENTICATION_BACKENDS = (
 
 SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = GOOGLE_KEY
 SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = GOOGLE_SECRET
+
+ABSOLUTE_URL_OVERRIDES = {
+    'auth.user': lambda u: reverse_lazy('user_detail',
+                                        args=[u.username])
+}
