@@ -15,7 +15,7 @@
             <span class="total">{{ total_followers }}</span>
             obserwujący{{ total_followers|pluralize:"ch" }}
         </span>
-        <a href="#" data-id="{{ user.id }}" data-action="{% if request.user in user.follower.all %}un{% endif %}follow" class="follow button">
+        <a href="#" data-id="{{ user.id }}" data-action="{% if request.user in user.followers.all %}un{% endif %}follow" class="follow button">
             {% if request.user not in user.followers.all %}
                 Obserwuj
             {% else %}
@@ -27,3 +27,35 @@
         </div>
     {% endwith %}
 {% endblock %}
+
+{% block domready %} <!-- str 168/9 -->
+    $('a.follow').click(function(e){ <!-- nadpisanie operacji klinięcia w odnośnik z klasą 'follow' -->
+        e.preventDefault(); <!-- wyłącza domyślną akcję spod <a> (przeniesienie pod link) -->
+        $.post('{% url "user_follow" %}', <!-- wskazanie funkcji, która odbierze żądanie -->
+            {
+                id: $(this).data('id'), <!-- zdefiniowanie słownika json, dane pobierane z <a> data-id i data-action -->
+                action: $(this).data('action')
+            },
+            function(data){ <!-- funkcja wykonana po odpowiedzi HTTP z serwera -->
+                if (data['status'] == 'ok') {
+                    var previous_action = $('a.follow').data('action');
+
+                    $('a.follow').data('action', <!-- zmiana wartości data-action -->
+                    previous_action == 'follow' ? 'unfollow' : 'follow');
+
+                    $('a.follow').text(<!-- zmiana tekstu wyświetlanego przez łącze -->
+                    previous_action == 'follow' ? 'Nie obserwuj' : 'Obserwuj');
+
+                    var previous_followers = parseInt(
+                        $('span.count .total').text()); <!-- Zwiększenie lub zmniejszenie liczby obserwujących -->
+                    $('span.count .total').text(previous_action == 'follow' ? previous_followers + 1 : previous_followers - 1);
+                }
+            }
+        );
+    });
+{% endblock %}
+
+
+
+
+

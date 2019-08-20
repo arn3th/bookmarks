@@ -5,6 +5,5 @@ db.*
 *.log
 *.pot
 *.pyc
-media/images/
-media/cache/
+media/
 .idea/
