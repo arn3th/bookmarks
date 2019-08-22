@@ -1,7 +1,9 @@
+import redis
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from django.conf import settings
 from django.shortcuts import get_object_or_404
 from django.http import JsonResponse, HttpResponse
 from django.views.decorators.http import require_POST
@@ -9,6 +11,7 @@ from .forms import ImageCreateForm
 from .models import Image
 from common.decorators import ajax_required
 from actions.utils import create_action
+
 
 @login_required
 def image_create(request):
@@ -37,10 +40,15 @@ def image_create(request):
 
 def image_detail(request, id, slug):
     image = get_object_or_404(Image, id=id, slug=slug)
+    # Inkrementacja całkowitej liczby wyświetleń obrazu.
+    total_views = r.incr('image:{}:views'.format(image.id))
+    # Inkrementacja liczby wyświetleń w rankingu danego obrazu
+    r.zincrby('image_ranking', image.id, 1) # wartości zapisują się w posortowanym ziorze
     return render(request,
                   'images/image/detail.html',
                   {'section': 'images',
-                   'image': image})
+                   'image': image,
+                   'total_views': total_views})
 
 
 @ajax_required
@@ -89,3 +97,21 @@ def image_list(request):
                  'images/image/list.html',
                   {'section': 'images', 'images': images})
 
+
+@login_required
+def image_ranking(request):
+    # Pobranie słownika rankingu obrazów
+    image_ranking = r.zrange('image_ranking', 0, -1, desc=True)[:10]
+    image_ranking_ids = [int(id) for id in image_ranking]
+    most_viewed = list(Image.objects.filter(
+                        id__in=image_ranking_ids))
+    most_viewed.sort(key=lambda x: image_ranking_ids.index(x.id))
+    return render(request,
+                  'images/image/ranking.html',
+                  {'section': 'images',
+                  'most_viewed': most_viewed})
+
+
+r = redis.StrictRedis(host=settings.REDIS_HOST,
+                      port=settings.REDIS_PORT,
+                      db=settings.REDIS_DB)
